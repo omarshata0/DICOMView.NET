@@ -37,9 +37,8 @@ A comprehensive web application for radiologists featuring a worklist management
 - **Framework**: React.js
 - **Data Fetching**: TanStack Query (React Query)
 - **Form Management**: React Hook Form
-- **HTTP Client**: Axios (assumed)
-- **Styling**: CSS/SCSS (assumed)
-- **Build Tool**: Create React App or Vite (assumed)
+- **Styling**: TailwindCSS
+- **Build Tool**: Vite
 
 ### Database
 
@@ -155,10 +154,10 @@ dotnet restore
 dotnet build
 
 # Run the application
-dotnet run
+dotnet run or dotnet watch run
 ```
 
-The API will be available at `https://localhost:5001` (or the port specified in your configuration).
+The API will be available at `https://localhost:5190` (or the port specified in your configuration).
 
 ### 4. Frontend Configuration
 
@@ -174,7 +173,7 @@ npm install
 # Key dependencies that should be installed:
 # npm install react-query @tanstack/react-query
 # npm install react-hook-form
-# npm install axios (for HTTP requests)
+......
 ```
 
 #### Configure API Endpoint
@@ -183,7 +182,7 @@ Update the API base URL in your frontend configuration (typically in a config fi
 
 ```javascript
 // Example configuration
-const API_BASE_URL = "https://localhost:5001/api";
+const API_BASE_URL = "https://localhost:5190/api";
 ```
 
 #### Run Frontend
@@ -193,7 +192,7 @@ const API_BASE_URL = "https://localhost:5001/api";
 npm start
 ```
 
-The frontend will be available at `http://localhost:3000`.
+The frontend will be available at `http://localhost:5173`.
 
 ## 📊 API Endpoints
 
@@ -202,18 +201,17 @@ The frontend will be available at `http://localhost:3000`.
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 - `POST /api/auth/refresh-token` - Refresh JWT token
-- `GET /api/auth` - Get current user info
+- `GET /api/auth` - Checks Authentication State
 - `GET /api/auth/user` - Get user details
 - `POST /api/auth/logout` - User logout
 
 ### Exams
 
 - `POST /api/exams/create` - Create new exam
-- `GET /api/exams/{examId}` - Get exam details
+- `GET /api/exams/{examId}` - Get one exam
 - `PUT /api/exams/{examId}` - Update exam
 - `DELETE /api/exams/{examId}` - Delete exam
 - `GET /api/exams` - Get all exams
-- `POST /api/exams/{examId}/dicom` - Upload DICOM data
 - `GET /api/exams/{examId}/dicom` - Get DICOM data
 
 ### Patients
@@ -224,12 +222,12 @@ The frontend will be available at `http://localhost:3000`.
 
 ### 1. Login
 
-- Access the application at `http://localhost:3000`
+- Access the application at `http://localhost:5173`
 - Use the provided credentials from the dummy data or register a new account
 
 ### 2. Create New Exam
 
-- Navigate to "Add New Exam" page
+- Click "Add New Exam" 
 - Fill in patient details (ID, Name, Gender, Birthdate, Email)
 - Specify exam type (CT Brain, Chest X-Ray, etc.)
 - Set date, time, and comments
@@ -280,139 +278,6 @@ The application uses three main tables in the `WorkListTask` database:
 - **Comments** (TEXT): Additional exam notes
 - **DicomStudyBlob** (VARBINARY(MAX)): DICOM image data stored as binary blob
 - **CreatedDate** (DATETIME): Record creation timestamp
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the backend directory:
-
-```env
-CONNECTION_STRING=Server=localhost;Database=WorkListTask;Trusted_Connection=true;TrustServerCertificate=true;
-JWT_SECRET=your-jwt-secret-key
-JWT_ISSUER=DICOMView.NET
-JWT_AUDIENCE=DICOMView.NET
-```
-
-### Key Frontend Technologies
-
-#### React Query (TanStack Query)
-
-The application uses React Query for efficient data fetching and state management:
-
-- Automatic caching and synchronization
-- Background refetching
-- Optimistic updates
-- Error handling
-
-#### React Hook Form
-
-Form management is handled by React Hook Form for:
-
-- Performant form validation
-- Minimal re-renders
-- Easy integration with UI libraries
-- Built-in error handling
-
-#### Example Usage
-
-```javascript
-// React Query example
-const {
-  data: exams,
-  isLoading,
-  error,
-} = useQuery({
-  queryKey: ["exams"],
-  queryFn: fetchExams,
-});
-
-// React Hook Form example
-const {
-  register,
-  handleSubmit,
-  formState: { errors },
-} = useForm();
-```
-
-## 🧪 Testing
-
-### Backend Testing
-
-```bash
-cd backend
-dotnet test
-```
-
-### Frontend Testing
-
-```bash
-cd frontend
-npm test
-```
-
-## 🚀 Deployment
-
-### Backend Deployment
-
-1. Publish the application:
-
-```bash
-dotnet publish -c Release -o ./publish
-```
-
-2. Deploy to IIS or Azure App Service
-
-### Frontend Deployment
-
-1. Build the production version:
-
-```bash
-npm run build
-```
-
-2. Deploy the `build` folder to your web server
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Issues**
-
-   - Verify SQL Server is running
-   - Check connection string in `appsettings.json`
-   - Ensure database exists and tables are created
-
-2. **CORS Errors**
-
-   - Verify CORS configuration in backend
-   - Check frontend API endpoint configuration
-
-3. **JWT Authentication Issues**
-   - Verify JWT secret key configuration
-   - Check token expiration settings
-
-### Support
-
-For issues and questions, please create an issue in the GitHub repository or contact the development team.
-
-## 📧 Contact
-
-- **Project Maintainer**: [Your Name]
-- **Email**: [your.email@example.com]
-- **GitHub**: [https://github.com/yourusername/DICOMView.NET]
 
 ---
 
