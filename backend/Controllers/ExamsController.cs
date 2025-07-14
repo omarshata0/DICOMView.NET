@@ -237,45 +237,45 @@ namespace backend.Controllers
             }
         }
 
-        [Authorize]
-        [HttpPost("{examId}/dicom")]
-        public async Task<IActionResult> UploadDicomStudy(int examId, IFormFile dicomFile)
-        {
-            Console.WriteLine($"UploadDicomStudy called with ExamId={examId}, FileName={dicomFile?.FileName ?? "null"}");
-            if (examId <= 0)
-            {
-                Console.WriteLine("Invalid request: ExamId must be positive.");
-                return BadRequest("ExamId must be a positive integer.");
-            }
-            if (dicomFile == null || dicomFile.Length == 0)
-            {
-                Console.WriteLine("Invalid request: DICOM file is null or empty.");
-                return BadRequest("DICOM file is required and cannot be empty.");
-            }
+        // [Authorize]
+        // [HttpPost("{examId}/dicom")]
+        // public async Task<IActionResult> UploadDicomStudy(int examId, IFormFile dicomFile)
+        // {
+        //     Console.WriteLine($"UploadDicomStudy called with ExamId={examId}, FileName={dicomFile?.FileName ?? "null"}");
+        //     if (examId <= 0)
+        //     {
+        //         Console.WriteLine("Invalid request: ExamId must be positive.");
+        //         return BadRequest("ExamId must be a positive integer.");
+        //     }
+        //     if (dicomFile == null || dicomFile.Length == 0)
+        //     {
+        //         Console.WriteLine("Invalid request: DICOM file is null or empty.");
+        //         return BadRequest("DICOM file is required and cannot be empty.");
+        //     }
 
-            try
-            {
-                using var stream = dicomFile.OpenReadStream();
-                await _examsService.UploadDicomStudyAsync(examId, stream);
-                Console.WriteLine($"DICOM study uploaded successfully for ExamId={examId}");
-                return Ok("DICOM study uploaded successfully.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                Console.WriteLine($"InvalidOperationException in UploadDicomStudy: {ex.Message}");
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.WriteLine($"KeyNotFoundException in UploadDicomStudy: {ex.Message}");
-                return NotFound($"Exam with ID {examId} not found.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Unexpected error in UploadDicomStudy: {ex}");
-                return StatusCode(500, "An unexpected error occurred while uploading the DICOM study.");
-            }
-        }
+        //     try
+        //     {
+        //         using var stream = dicomFile.OpenReadStream();
+        //         await _examsService.UploadDicomStudyAsync(examId, stream);
+        //         Console.WriteLine($"DICOM study uploaded successfully for ExamId={examId}");
+        //         return Ok("DICOM study uploaded successfully.");
+        //     }
+        //     catch (InvalidOperationException ex)
+        //     {
+        //         Console.WriteLine($"InvalidOperationException in UploadDicomStudy: {ex.Message}");
+        //         return BadRequest(ex.Message);
+        //     }
+        //     catch (KeyNotFoundException ex)
+        //     {
+        //         Console.WriteLine($"KeyNotFoundException in UploadDicomStudy: {ex.Message}");
+        //         return NotFound($"Exam with ID {examId} not found.");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"Unexpected error in UploadDicomStudy: {ex}");
+        //         return StatusCode(500, "An unexpected error occurred while uploading the DICOM study.");
+        //     }
+        // }
 
         [Authorize]
         [HttpGet("{examId}/dicom")]

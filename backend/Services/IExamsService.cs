@@ -21,7 +21,7 @@ namespace backend.Services
             DateTime? toDate = null);
         Task UpdateExamAsync(ExamWithPatientDto exam);
         Task DeleteExamAsync(int examId);
-        Task UploadDicomStudyAsync(int examId, Stream dicomStream);
+        // Task UploadDicomStudyAsync(int examId, Stream dicomStream);
         Task<byte[]?> GetDicomBlobAsync(int examId);
         Task<List<Patient>> GetAllPatientsAsync();
     }

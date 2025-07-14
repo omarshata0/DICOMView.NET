@@ -34,11 +34,10 @@ namespace backend.Services
             if (!validStatuses.Contains(exam.Status))
                 throw new ArgumentException($"Status must be one of: {string.Join(", ", validStatuses)}");
 
-            // Only validate PatientId for existing patients
             if (!exam.IsNewPatient && exam.PatientId <= 0)
                 throw new ArgumentException("Valid PatientId is required for existing patients.");
 
-            // If IsNewPatient is true, validate patient fields
+            // If IsNewPatient is true -> validate patient fields
             if (exam.IsNewPatient)
             {
                 if (string.IsNullOrEmpty(exam.PatientName))
@@ -372,39 +371,39 @@ namespace backend.Services
             }
         }
 
-        public async Task UploadDicomStudyAsync(int examId, Stream dicomStream)
-        {
-            if (examId <= 0) throw new ArgumentException("Valid ExamId is required.");
-            if (dicomStream == null || !dicomStream.CanRead) throw new ArgumentException("DICOM stream is required and must be readable.");
+        // public async Task UploadDicomStudyAsync(int examId, Stream dicomStream)
+        // {
+        //     if (examId <= 0) throw new ArgumentException("Valid ExamId is required.");
+        //     if (dicomStream == null || !dicomStream.CanRead) throw new ArgumentException("DICOM stream is required and must be readable.");
 
-            // Verify exam exists
-            await GetExamAsync(examId); // Throws if not found
+        //     // Verify exam exists
+        //     await GetExamAsync(examId); // Throws if not found
 
-            using var memoryStream = new MemoryStream();
-            await dicomStream.CopyToAsync(memoryStream);
-            var blobData = memoryStream.ToArray();
+        //     using var memoryStream = new MemoryStream();
+        //     await dicomStream.CopyToAsync(memoryStream);
+        //     var blobData = memoryStream.ToArray();
 
-            if (blobData.Length == 0)
-            {
-                throw new InvalidOperationException("DICOM stream is empty.");
-            }
+        //     if (blobData.Length == 0)
+        //     {
+        //         throw new InvalidOperationException("DICOM stream is empty.");
+        //     }
 
-            using var connection = CreateConnection();
-            // Delete any existing blob for this ExamId to avoid duplicates
-            await connection.ExecuteAsync(
-                "DELETE FROM ExamBlob WHERE ExamId = @ExamId",
-                new { ExamId = examId });
+        //     using var connection = CreateConnection();
+        //     // Delete any existing blob for this ExamId to avoid duplicates
+        //     await connection.ExecuteAsync(
+        //         "DELETE FROM ExamBlob WHERE ExamId = @ExamId",
+        //         new { ExamId = examId });
 
-            // Insert new blob
-            var rowsAffected = await connection.ExecuteAsync(
-                "INSERT INTO ExamBlob (DicomStudyBlob, ExamId) VALUES (@DicomStudyBlob, @ExamId)",
-                new { DicomStudyBlob = blobData, ExamId = examId });
+        //     // Insert new blob
+        //     var rowsAffected = await connection.ExecuteAsync(
+        //         "INSERT INTO ExamBlob (DicomStudyBlob, ExamId) VALUES (@DicomStudyBlob, @ExamId)",
+        //         new { DicomStudyBlob = blobData, ExamId = examId });
 
-            if (rowsAffected == 0)
-            {
-                throw new InvalidOperationException($"Failed to upload DICOM study for Exam ID {examId}.");
-            }
-        }
+        //     if (rowsAffected == 0)
+        //     {
+        //         throw new InvalidOperationException($"Failed to upload DICOM study for Exam ID {examId}.");
+        //     }
+        // }
 
         public async Task<byte[]?> GetDicomBlobAsync(int examId)
         {
