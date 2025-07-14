@@ -73,11 +73,11 @@ DICOMView.NET/
 
 Before running the application, ensure you have the following installed:
 
-- **.NET 6.0 or later** - [Download](https://dotnet.microsoft.com/download)
-- **Node.js 16+ and npm** - [Download](https://nodejs.org/)
-- **Microsoft SQL Server** - [Download](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+- **.NET 6.0 or later** - Download
+- **Node.js 16+ and npm** - Download
+- **Microsoft SQL Server** - Download
 - **Python 3.8+** (for data seeding script)
-- **Git** - [Download](https://git-scm.com/)
+- **Git** - Download
 
 ## 🚦 Getting Started
 
@@ -117,7 +117,7 @@ cd backend/scripts
 # Install Python dependencies
 pip install pyodbc pydicom
 
-# Run the data seeding script to populate DicomStudyBlob
+# Run the data seeding script to populate ExamBlob
 python dataSeed.py
 ```
 
@@ -227,10 +227,10 @@ The frontend will be available at `http://localhost:5173`.
 
 ### 2. Create New Exam
 
-- Click "Add New Exam" 
+- Click "Add New Exam"
 - Fill in patient details (ID, Name, Gender, Birthdate, Email)
 - Specify exam type (CT Brain, Chest X-Ray, etc.)
-- Set date, time, and comments
+- Set date and time
 - Select exam status
 
 ### 3. View Worklist
@@ -247,7 +247,7 @@ The frontend will be available at `http://localhost:5173`.
 
 ## 🗄️ Database Schema
 
-The application uses three main tables in the `WorkListTask` database:
+The application uses four main tables in the `WorkListTask` database:
 
 ### Users Table
 
@@ -255,7 +255,8 @@ The application uses three main tables in the `WorkListTask` database:
 - **Username** (VARCHAR(50), Unique): User login name
 - **PasswordHash** (VARCHAR(255)): Hashed password for security
 - **Email** (VARCHAR(100), Unique): User email address
-- **FullName** (VARCHAR(100)): User's full name
+- **RefreshToken** (VARCHAR(255), Nullable): Stores JWT refresh token
+- **RefreshTokenExpiryTime** (DATETIME, Nullable): Refresh token expiration timestamp
 - **CreatedDate** (DATETIME): Account creation timestamp
 
 ### Patients Table
@@ -272,10 +273,15 @@ The application uses three main tables in the `WorkListTask` database:
 - **ExamId** (INT, Primary Key, Identity): Unique exam identifier
 - **PatientId** (INT, Foreign Key): Reference to Patients table
 - **ExamType** (VARCHAR(100)): Type of exam (CT Brain, Chest X-Ray, etc.)
-- **ExamDate** (DATETIME): Scheduled exam date and time
-- **ExamTime** (TIME): Specific exam time
+- **ExamDate** (DATETIME2): Scheduled exam date and time
 - **Status** (VARCHAR(20)): Exam status (Scheduled, Arrived, Cancelled, Completed)
 - **Comments** (TEXT): Additional exam notes
+- **CreatedDate** (DATETIME): Record creation timestamp
+
+### ExamBlob Table
+
+- **ExamBlobId** (INT, Primary Key, Identity): Unique identifier for DICOM blob
+- **ExamId** (INT, Foreign Key): Reference to Exams table
 - **DicomStudyBlob** (VARBINARY(MAX)): DICOM image data stored as binary blob
 - **CreatedDate** (DATETIME): Record creation timestamp
 
