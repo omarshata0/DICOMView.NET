@@ -29,7 +29,7 @@ function Viewer() {
   const extractDicomFiles = async (blob) => {
     try {
       const arrayBuffer = await blob.arrayBuffer();
-      const dataView = new DataView(arrayBuffer); // Use DataView for reading integers
+      const dataView = new DataView(arrayBuffer);
       const dicomFiles = [];
 
       let currentIndex = 0;
@@ -110,15 +110,15 @@ function Viewer() {
           addTool,
         } = cornerstoneTools;
 
-        console.log("Available tools:", {
-          PanTool: !!PanTool,
-          WindowLevelTool: !!WindowLevelTool,
-          StackScrollTool: !!StackScrollTool,
-          ZoomTool: !!ZoomTool,
-          LengthTool: !!LengthTool,
-          AngleTool: !!AngleTool,
-          addTool: !!addTool,
-        });
+        // console.log("Available tools:", {
+        //   PanTool: !!PanTool,
+        //   WindowLevelTool: !!WindowLevelTool,
+        //   StackScrollTool: !!StackScrollTool,
+        //   ZoomTool: !!ZoomTool,
+        //   LengthTool: !!LengthTool,
+        //   AngleTool: !!AngleTool,
+        //   addTool: !!addTool,
+        // });
 
         // Add available tools
         if (PanTool && addTool) {
@@ -174,12 +174,12 @@ function Viewer() {
     toolGroup.setToolActive(activeTool, {
       bindings: [
         {
-          mouseButton: csToolsEnums.MouseBindings.Primary, // Left click
+          mouseButton: csToolsEnums.MouseBindings.Primary,
         },
       ],
     });
 
-    // Always keep stack scroll active (for mouse wheel)
+    // Always keep stack scroll active
     toolGroup.setToolActive("StackScroll", {
       bindings: [
         {
@@ -193,7 +193,6 @@ function Viewer() {
     async function initializeViewer() {
       if (!dicomBlobData || !containerRef.current || !isInitialized) return;
 
-      // Check if examId is valid
       if (!examId || examId === "undefined") {
         setImageError("Invalid exam ID");
         return;
@@ -203,7 +202,6 @@ function Viewer() {
       setImageError(null);
 
       try {
-        // Extract individual DICOM files from the blob
         const dicomFiles = await extractDicomFiles(dicomBlobData);
 
         if (dicomFiles.length === 0) {
@@ -264,7 +262,7 @@ function Viewer() {
           Enums: csToolsEnums,
         } = cornerstoneTools;
 
-        // Add tools to tool group - check if they exist
+        // Add tools to tool group
         if (PanTool) {
           toolGroupRef.current.addTool(PanTool.toolName);
         }
@@ -406,14 +404,6 @@ function Viewer() {
       }
     };
   }, [dicomBlobData, isInitialized, examId]);
-
-  // Debug examId
-  useEffect(() => {
-    console.log("Current examId:", examId);
-    if (!examId || examId === "undefined") {
-      console.log("ExamId is undefined or invalid");
-    }
-  }, [examId]);
 
   const handleReset = () => {
     if (!viewportRef.current) return;

@@ -58,7 +58,7 @@ namespace backend.Services
 
             try
             {
-                // If IsNewPatient is true, create a new patient record
+                // If IsNewPatient is true -> create a new patient record
                 int patientId = exam.PatientId;
                 if (exam.IsNewPatient)
                 {
@@ -171,8 +171,8 @@ namespace backend.Services
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
-            // Compute effective from/to dates based on dateOption if it's a preset
-            DateTime today = DateTime.Today; // Use DateTime.UtcNow.Date for UTC if preferred
+            // Date FIlters
+            DateTime today = DateTime.Today;
             if (!string.IsNullOrEmpty(dateOption) && dateOption != "custom")
             {
                 switch (dateOption)
@@ -202,7 +202,6 @@ namespace backend.Services
                         toDate = today.AddDays(1);
                         break;
                     default:
-                        // Invalid dateOption: ignore date filter
                         fromDate = null;
                         toDate = null;
                         break;
@@ -210,7 +209,7 @@ namespace backend.Services
             }
             else if (dateOption == "custom")
             {
-                // Use provided from/to; validate if needed
+
                 if (fromDate > toDate)
                 {
                     throw new ArgumentException("fromDate cannot be after toDate for custom range.");
@@ -223,7 +222,7 @@ namespace backend.Services
                  p.PatientName, p.Birthdate, p.Gender, p.Email
           FROM Exams e
           INNER JOIN Patients p ON e.PatientId = p.PatientId
-          WHERE 1=1"); // Allows easy appending of conditions
+          WHERE 1=1");
 
             var parameters = new DynamicParameters();
 
@@ -285,7 +284,7 @@ namespace backend.Services
             if (string.IsNullOrEmpty(exam.Email)) throw new ArgumentException("Email is required.");
 
             // Validate Status
-            var validStatuses = new[] { "Scheduled", "Arrived", "Cancelled", "Completed" }; // Updated to match database
+            var validStatuses = new[] { "Scheduled", "Arrived", "Cancelled", "Completed" };
             if (string.IsNullOrEmpty(exam.Status) || !validStatuses.Contains(exam.Status))
             {
                 throw new ArgumentException($"Status must be one of: {string.Join(", ", validStatuses)}");
@@ -345,7 +344,7 @@ namespace backend.Services
 
             try
             {
-                // Delete from ExamBlob first due to foreign key constraint
+                // Delete from ExamBlob first 
                 await connection.ExecuteAsync(
                     "DELETE FROM ExamBlob WHERE ExamId = @ExamId",
                     new { ExamId = examId },

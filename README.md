@@ -1,6 +1,6 @@
 # DICOMView.NET
 
-A comprehensive web application for radiologists featuring a worklist management system and medical image viewer. Built with ASP.NET Core backend, React frontend, and Microsoft SQL Server database.
+A comprehensive web application for radiologists featuring a worklist management system and medical image viewer. Built with ASP.NET Core for the backend, React.js for the frontend, and Microsoft SQL Server database.
 
 ## 🚀 Features
 
@@ -73,11 +73,11 @@ DICOMView.NET/
 
 Before running the application, ensure you have the following installed:
 
-- **.NET 6.0 or later** - Download
-- **Node.js 16+ and npm** - Download
-- **Microsoft SQL Server** - Download
-- **Python 3.8+** (for data seeding script)
-- **Git** - Download
+- **.NET 6.0 or later**
+- **Node.js 16+ and npm**
+- **Microsoft SQL Server**
+- **Python 3.8+**
+- **Git**
 
 ## 🚦 Getting Started
 
@@ -92,7 +92,7 @@ cd DICOMView.NET
 
 #### Create Database Tables
 
-1. Open SQL Server Management Studio (SSMS)
+1. Open SQL Server Management Studio (SSMS) or Azure Data Studio
 2. Connect to your SQL Server instance
 3. Execute the table creation script:
 
@@ -168,12 +168,8 @@ The API will be available at `https://localhost:5190` (or the port specified in 
 cd frontend
 
 # Install npm packages
-npm install
+npm install or pnpm install
 
-# Key dependencies that should be installed:
-# npm install react-query @tanstack/react-query
-# npm install react-hook-form
-......
 ```
 
 #### Configure API Endpoint
@@ -189,7 +185,7 @@ const API_BASE_URL = "https://localhost:5190/api";
 
 ```bash
 # Start the development server
-npm start
+npm run dev or npm run dev
 ```
 
 The frontend will be available at `http://localhost:5173`.

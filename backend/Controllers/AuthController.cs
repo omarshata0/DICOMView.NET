@@ -77,7 +77,7 @@ namespace backend.Controllers
 
             var userResponse = new UserResponseDto
             {
-                UserId = user.UserId, // Now int
+                UserId = user.UserId, 
                 Username = user.Username,
                 Email = user.Email
             };

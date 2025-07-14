@@ -9,7 +9,6 @@ import Spinner from "../../ui/Spinner";
 import Pagination from "../../ui/Pagination";
 
 function ExamsTable() {
-  // Move all hooks to the top
   const { exams, isLoading } = useExams();
   const [searchParams] = useSearchParams();
   const initialColumnWidths = [
@@ -17,12 +16,12 @@ function ExamsTable() {
     100, // Date
     100, // Time
     80, // Patient ID
-    100, // Study ID (wider for long IDs)
+    100, // Study ID 
     200, // Name
     120, // Birth Date
     80, // Gender
     80, // Modality
-    150, // Description (wider for longer text)
+    150, // Description 
     100, // Dropdown icon
   ];
   const [columnWidths, setColumnWidths] = useState(initialColumnWidths);

@@ -23,7 +23,6 @@ function SearchSideBar() {
     setToDate,
   } = useFilters();
 
-  // Temporary state for filter inputs
   const [tempPatientId, setTempPatientId] = useState("");
   const [tempPatientName, setTempPatientName] = useState("");
   const [tempExamModality, setTempExamModality] = useState("");
@@ -69,7 +68,6 @@ function SearchSideBar() {
     { value: "Completed", label: "Completed" },
   ];
 
-  // Function to apply filters when Search button is clicked
   const handleSearch = () => {
     setPatientIdFilter(tempPatientId);
     setPatientNameFilter(tempPatientName);
@@ -77,7 +75,7 @@ function SearchSideBar() {
     setExamStatusFilter(tempExamStatus);
     setGenderFilter(tempGender);
     setDateOption(tempDateOption);
-    // Format dates as YYYY-MM-DD for API
+
     setFromDate(
       tempFromDate ? new Date(tempFromDate).toISOString().split("T")[0] : ""
     );
@@ -86,7 +84,6 @@ function SearchSideBar() {
     );
   };
 
-  // Function to reset all filter fields
   const handleReset = () => {
     setTempPatientId("");
     setTempPatientName("");
@@ -96,7 +93,6 @@ function SearchSideBar() {
     setTempDateOption("");
     setTempFromDate("");
     setTempToDate("");
-    // Also reset the applied filters
     setPatientIdFilter("");
     setPatientNameFilter("");
     setExamModalityFilter("");

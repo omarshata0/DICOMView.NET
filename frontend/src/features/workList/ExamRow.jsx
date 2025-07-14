@@ -38,7 +38,6 @@ function ExamRow({ exam }) {
   const formattedBirthdate = format(new Date(birthdate), "MMM dd yyyy");
   const modality = examType.split(" ")[0];
 
-  // Function to determine text color based on status
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "scheduled":
@@ -54,7 +53,6 @@ function ExamRow({ exam }) {
     }
   };
 
-  // Handle double-click to open viewer page in a new tab
   const handleDoubleClick = () => {
     window.open(`/viewer/${examId}`, "_blank");
   };
