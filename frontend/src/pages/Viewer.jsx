@@ -24,7 +24,7 @@ function Viewer() {
   const [loadingImages, setLoadingImages] = useState(false);
   const [imageError, setImageError] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [activeTool, setActiveTool] = useState("WindowLevel"); // Default active tool for left click
+  const [activeTool, setActiveTool] = useState("WindowLevel");
 
   const extractDicomFiles = async (blob) => {
     try {
@@ -100,14 +100,23 @@ function Viewer() {
         console.log("Cornerstone Tools initialized");
 
         // Add tools - check if they exist before adding
-        const { PanTool, WindowLevelTool, StackScrollTool, ZoomTool, addTool } =
-          cornerstoneTools;
+        const {
+          PanTool,
+          WindowLevelTool,
+          StackScrollTool,
+          ZoomTool,
+          LengthTool,
+          AngleTool,
+          addTool,
+        } = cornerstoneTools;
 
         console.log("Available tools:", {
           PanTool: !!PanTool,
           WindowLevelTool: !!WindowLevelTool,
           StackScrollTool: !!StackScrollTool,
           ZoomTool: !!ZoomTool,
+          LengthTool: !!LengthTool,
+          AngleTool: !!AngleTool,
           addTool: !!addTool,
         });
 
@@ -128,6 +137,14 @@ function Viewer() {
           addTool(StackScrollTool);
           console.log("StackScrollTool added");
         }
+        if (LengthTool && addTool) {
+          addTool(LengthTool);
+          console.log("LengthTool added");
+        }
+        if (AngleTool && addTool) {
+          addTool(AngleTool);
+          console.log("AngleTool added");
+        }
 
         setIsInitialized(true);
         console.log("Cornerstone initialized successfully");
@@ -140,7 +157,6 @@ function Viewer() {
     initializeCornerstone();
   }, [isInitialized]);
 
-  // Update tool activations when activeTool changes
   useEffect(() => {
     const toolGroup = toolGroupRef.current;
     if (!toolGroup) return;
@@ -151,6 +167,8 @@ function Viewer() {
     toolGroup.setToolPassive("WindowLevel");
     toolGroup.setToolPassive("Pan");
     toolGroup.setToolPassive("Zoom");
+    toolGroup.setToolPassive("Length");
+    toolGroup.setToolPassive("Angle");
 
     // Activate the selected tool on primary mouse button
     toolGroup.setToolActive(activeTool, {
@@ -241,6 +259,8 @@ function Viewer() {
           WindowLevelTool,
           StackScrollTool,
           ZoomTool,
+          LengthTool,
+          AngleTool,
           Enums: csToolsEnums,
         } = cornerstoneTools;
 
@@ -257,12 +277,15 @@ function Viewer() {
         if (StackScrollTool) {
           toolGroupRef.current.addTool(StackScrollTool.toolName);
         }
+        if (LengthTool) {
+          toolGroupRef.current.addTool(LengthTool.toolName);
+        }
+        if (AngleTool) {
+          toolGroupRef.current.addTool(AngleTool.toolName);
+        }
 
         // Add viewport to tool group
         toolGroupRef.current.addViewport(viewportId, renderingEngineId);
-
-        // Initial tool setup (triggers the useEffect above)
-        // No need to set here; the useEffect will handle it based on activeTool state
 
         // Sort DICOM files by instance number and slice location
         const sortedFiles = await Promise.all(
@@ -274,13 +297,13 @@ function Viewer() {
               );
 
               // Try to get instance number first
-              const instanceNumber = dataSet.string("x00200013"); // Instance Number
+              const instanceNumber = dataSet.string("x00200013");
 
               // Try to get slice location as fallback
-              const sliceLocation = dataSet.string("x00201041"); // Slice Location
+              const sliceLocation = dataSet.string("x00201041");
 
               // Try to get image position patient Z coordinate as another fallback
-              const imagePositionPatient = dataSet.string("x00200032"); // Image Position Patient
+              const imagePositionPatient = dataSet.string("x00200032");
               let zPosition = null;
               if (imagePositionPatient) {
                 const positions = imagePositionPatient.split("\\");
@@ -289,7 +312,7 @@ function Viewer() {
                 }
               }
 
-              // Use instance number if available, otherwise use slice location, then z position, then original index
+              // Use instance number if available -> otherwise use slice location -> then z position -> then original index
               let sortKey = index;
               if (instanceNumber && !isNaN(parseInt(instanceNumber))) {
                 sortKey = parseInt(instanceNumber);
@@ -457,6 +480,26 @@ function Viewer() {
               onClick={() => setActiveTool("Zoom")}
             >
               Zoom
+            </button>
+            <button
+              className={`px-4 py-2 rounded h-10 cursor-pointer ${
+                activeTool === "Length"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTool("Length")}
+            >
+              Length
+            </button>
+            <button
+              className={`px-4 py-2 rounded h-10 cursor-pointer ${
+                activeTool === "Angle"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTool("Angle")}
+            >
+              Angle
             </button>
             <button
               className="px-4 py-2 rounded h-10 cursor-pointer bg-white text-black"

@@ -119,6 +119,9 @@ export async function logout() {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 
+  console.log(localStorage.getItem("accessToken"));
+  console.log(localStorage.getItem("refreshToken"));
+
   if (!response.ok) {
     const data = await response.json();
     throw new Error(data.message || "Failed to log out");
