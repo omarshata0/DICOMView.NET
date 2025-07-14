@@ -54,9 +54,9 @@ function ExamRow({ exam }) {
     }
   };
 
-  // Handle double-click to navigate to viewer page
+  // Handle double-click to open viewer page in a new tab
   const handleDoubleClick = () => {
-    navigate(`/viewer/${examId}`);
+    window.open(`/viewer/${examId}`, "_blank");
   };
 
   return (

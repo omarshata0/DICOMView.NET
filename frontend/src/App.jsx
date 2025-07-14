@@ -18,6 +18,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -25,7 +26,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       <FilterProvider>
         <BrowserRouter>
           <Routes>
@@ -42,7 +43,7 @@ function App() {
             </Route>
 
             <Route
-              path="viewer/:studyId"
+              path="viewer/:examId"
               element={
                 <ProtectedRoute>
                   <Viewer />

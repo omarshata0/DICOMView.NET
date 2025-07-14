@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { getDicomBlob } from "../../services/apiExams";
 
-export function useDicomData({ examId }) {
+export function useDicomData(examId) {
   const {
     isLoading,
     data: dicomBlob,
@@ -11,6 +11,7 @@ export function useDicomData({ examId }) {
     queryKey: ["dicomBlob", examId],
     queryFn: () => getDicomBlob(examId),
     retry: false,
+    refetchOnWindowFocus: false,
   });
 
   return { isLoading, error, dicomBlob };

@@ -5,6 +5,7 @@ import * as cornerstoneTools from "@cornerstonejs/tools";
 import * as cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
 import dicomParser from "dicom-parser";
 import { useDicomData } from "../features/workList/useDicomData";
+import Logo from "../ui/Logo";
 
 const { ViewportType } = cornerstone.Enums;
 
@@ -14,71 +15,65 @@ function Viewer() {
     isLoading: isLoadingDicomBlobData,
     error: errorDicomBlobData,
     dicomBlob: dicomBlobData,
-  } = useDicomData({ examId });
+  } = useDicomData(examId);
 
   const renderingEngineRef = useRef(null);
   const containerRef = useRef(null);
   const toolGroupRef = useRef(null);
+  const viewportRef = useRef(null);
   const [loadingImages, setLoadingImages] = useState(false);
   const [imageError, setImageError] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [activeTool, setActiveTool] = useState("WindowLevel"); // Default active tool for left click
 
-  // Function to extract individual DICOM files from the concatenated blob
   const extractDicomFiles = async (blob) => {
     try {
       const arrayBuffer = await blob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+      const dataView = new DataView(arrayBuffer); // Use DataView for reading integers
       const dicomFiles = [];
 
       let currentIndex = 0;
-      const delimiter = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
 
-      while (currentIndex < uint8Array.length) {
-        // Find the next delimiter
-        let delimiterIndex = -1;
-        for (let i = currentIndex; i <= uint8Array.length - 4; i++) {
-          if (
-            uint8Array[i] === 0x00 &&
-            uint8Array[i + 1] === 0x00 &&
-            uint8Array[i + 2] === 0x00 &&
-            uint8Array[i + 3] === 0x00
-          ) {
-            delimiterIndex = i;
-            break;
-          }
+      while (currentIndex < arrayBuffer.byteLength) {
+        if (currentIndex + 4 > arrayBuffer.byteLength) {
+          console.log("Incomplete length prefix at end of blob");
+          break;
         }
 
-        let endIndex;
-        if (delimiterIndex !== -1) {
-          endIndex = delimiterIndex;
+        // Read 4-byte big-endian unsigned length // false for big-endian
+        const length = dataView.getUint32(currentIndex, false);
+        currentIndex += 4;
+
+        if (length === 0) continue; // Skip empty files
+
+        if (currentIndex + length > arrayBuffer.byteLength) {
+          throw new Error("Invalid length: exceeds blob size");
+        }
+
+        const fileData = new Uint8Array(arrayBuffer, currentIndex, length);
+
+        // Validate as DICOM
+        if (fileData.length > 132) {
+          const dicmCheck = new TextDecoder().decode(fileData.slice(128, 132));
+          if (dicmCheck === "DICM") {
+            const fileBlob = new Blob([fileData], {
+              type: "application/dicom",
+            });
+            dicomFiles.push(fileBlob);
+          } else {
+            console.log("Segment skipped: missing DICM signature");
+          }
         } else {
-          // Last file or no delimiter found
-          endIndex = uint8Array.length;
+          console.log("Segment skipped: too short for DICOM");
         }
 
-        if (endIndex > currentIndex) {
-          const fileData = uint8Array.slice(currentIndex, endIndex);
-
-          // Validate that this looks like a DICOM file
-          if (fileData.length > 132) {
-            // Check for DICOM prefix at position 128
-            const dicmCheck = new TextDecoder().decode(
-              fileData.slice(128, 132)
-            );
-            if (dicmCheck === "DICM") {
-              const blob = new Blob([fileData], { type: "application/dicom" });
-              dicomFiles.push(blob);
-            }
-          }
-        }
-
-        currentIndex =
-          delimiterIndex !== -1 ? delimiterIndex + 4 : uint8Array.length;
+        currentIndex += length;
       }
 
       console.log(`Extracted ${dicomFiles.length} DICOM files from blob`);
       return dicomFiles;
     } catch (error) {
-      console.error("Error extracting DICOM files:", error);
+      console.log("Error extracting DICOM files:", error);
       throw error;
     }
   };
@@ -86,50 +81,105 @@ function Viewer() {
   useEffect(() => {
     async function initializeCornerstone() {
       try {
-        // Initialize cornerstone
+        // Check if already initialized
+        if (isInitialized) return;
+
+        // Inside initializeCornerstone
+        console.log("Initializing Cornerstone...");
+
+        // Initialize cornerstone core
         await cornerstone.init();
+        console.log("Cornerstone core initialized");
 
-        // Initialize tools
+        // Initialize DICOM image loader
+        cornerstoneDICOMImageLoader.init();
+        console.log("DICOM Image Loader initialized");
+
+        // Initialize tools after cornerstone and image loader
         await cornerstoneTools.init();
+        console.log("Cornerstone Tools initialized");
 
-        // Configure DICOM image loader
-        cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
-        cornerstoneDICOMImageLoader.external.dicomParser = dicomParser;
-        cornerstoneDICOMImageLoader.configure({
-          useWebWorkers: true,
-          decodeConfig: {
-            convertFloatPixelDataToInt: false,
-          },
+        // Add tools - check if they exist before adding
+        const { PanTool, WindowLevelTool, StackScrollTool, ZoomTool, addTool } =
+          cornerstoneTools;
+
+        console.log("Available tools:", {
+          PanTool: !!PanTool,
+          WindowLevelTool: !!WindowLevelTool,
+          StackScrollTool: !!StackScrollTool,
+          ZoomTool: !!ZoomTool,
+          addTool: !!addTool,
         });
 
-        // Add tools
-        const {
-          PanTool,
-          WindowLevelTool,
-          StackScrollMouseWheelTool,
-          ZoomTool,
-          addTool,
-        } = cornerstoneTools;
-
         // Add available tools
-        if (PanTool) addTool(PanTool);
-        if (WindowLevelTool) addTool(WindowLevelTool);
-        if (ZoomTool) addTool(ZoomTool);
-        if (StackScrollMouseWheelTool) addTool(StackScrollMouseWheelTool);
+        if (PanTool && addTool) {
+          addTool(PanTool);
+          console.log("PanTool added");
+        }
+        if (WindowLevelTool && addTool) {
+          addTool(WindowLevelTool);
+          console.log("WindowLevelTool added");
+        }
+        if (ZoomTool && addTool) {
+          addTool(ZoomTool);
+          console.log("ZoomTool added");
+        }
+        if (StackScrollTool && addTool) {
+          addTool(StackScrollTool);
+          console.log("StackScrollTool added");
+        }
 
+        setIsInitialized(true);
         console.log("Cornerstone initialized successfully");
       } catch (error) {
-        console.error("Failed to initialize Cornerstone:", error);
-        setImageError("Failed to initialize DICOM viewer");
+        console.log("Failed to initialize Cornerstone:", error);
+        setImageError(`Failed to initialize DICOM viewer: ${error.message}`);
       }
     }
 
     initializeCornerstone();
-  }, []);
+  }, [isInitialized]);
+
+  // Update tool activations when activeTool changes
+  useEffect(() => {
+    const toolGroup = toolGroupRef.current;
+    if (!toolGroup) return;
+
+    const { Enums: csToolsEnums } = cornerstoneTools;
+
+    // Set interaction tools to passive
+    toolGroup.setToolPassive("WindowLevel");
+    toolGroup.setToolPassive("Pan");
+    toolGroup.setToolPassive("Zoom");
+
+    // Activate the selected tool on primary mouse button
+    toolGroup.setToolActive(activeTool, {
+      bindings: [
+        {
+          mouseButton: csToolsEnums.MouseBindings.Primary, // Left click
+        },
+      ],
+    });
+
+    // Always keep stack scroll active (for mouse wheel)
+    toolGroup.setToolActive("StackScroll", {
+      bindings: [
+        {
+          mouseButton: csToolsEnums.MouseBindings.Wheel,
+        },
+      ],
+    });
+  }, [activeTool]);
 
   useEffect(() => {
     async function initializeViewer() {
-      if (!dicomBlobData || !containerRef.current) return;
+      if (!dicomBlobData || !containerRef.current || !isInitialized) return;
+
+      // Check if examId is valid
+      if (!examId || examId === "undefined") {
+        setImageError("Invalid exam ID");
+        return;
+      }
 
       setLoadingImages(true);
       setImageError(null);
@@ -163,6 +213,10 @@ function Viewer() {
 
         renderingEngineRef.current.enableElement(viewportInput);
 
+        // Store viewport reference
+        viewportRef.current =
+          renderingEngineRef.current.getViewport(viewportId);
+
         // Create tool group
         const toolGroupId = "STACK_TOOL_GROUP_ID";
 
@@ -173,10 +227,11 @@ function Viewer() {
               toolGroupRef.current.id
             );
           } catch (error) {
-            console.warn("Error destroying existing tool group:", error);
+            console.log("Error destroying existing tool group:", error);
           }
         }
 
+        // Create new tool group
         toolGroupRef.current =
           cornerstoneTools.ToolGroupManager.createToolGroup(toolGroupId);
 
@@ -184,59 +239,30 @@ function Viewer() {
         const {
           PanTool,
           WindowLevelTool,
-          StackScrollMouseWheelTool,
+          StackScrollTool,
           ZoomTool,
           Enums: csToolsEnums,
         } = cornerstoneTools;
 
-        // Add tools to tool group
-        if (PanTool) toolGroupRef.current.addTool(PanTool.toolName);
-        if (WindowLevelTool)
+        // Add tools to tool group - check if they exist
+        if (PanTool) {
+          toolGroupRef.current.addTool(PanTool.toolName);
+        }
+        if (WindowLevelTool) {
           toolGroupRef.current.addTool(WindowLevelTool.toolName);
-        if (ZoomTool) toolGroupRef.current.addTool(ZoomTool.toolName);
-        if (StackScrollMouseWheelTool)
-          toolGroupRef.current.addTool(StackScrollMouseWheelTool.toolName);
-
-        // Set tool modes
-        if (WindowLevelTool && csToolsEnums) {
-          toolGroupRef.current.setToolActive(WindowLevelTool.toolName, {
-            bindings: [
-              {
-                mouseButton: csToolsEnums.MouseBindings.Primary, // Left Click
-              },
-            ],
-          });
         }
-
-        if (PanTool && csToolsEnums) {
-          toolGroupRef.current.setToolActive(PanTool.toolName, {
-            bindings: [
-              {
-                mouseButton: csToolsEnums.MouseBindings.Auxiliary, // Middle Click
-              },
-            ],
-          });
+        if (ZoomTool) {
+          toolGroupRef.current.addTool(ZoomTool.toolName);
         }
-
-        if (ZoomTool && csToolsEnums) {
-          toolGroupRef.current.setToolActive(ZoomTool.toolName, {
-            bindings: [
-              {
-                mouseButton: csToolsEnums.MouseBindings.Secondary, // Right Click
-              },
-            ],
-          });
-        }
-
-        // Activate scroll tool for multi-slice navigation
-        if (StackScrollMouseWheelTool) {
-          toolGroupRef.current.setToolActive(
-            StackScrollMouseWheelTool.toolName
-          );
+        if (StackScrollTool) {
+          toolGroupRef.current.addTool(StackScrollTool.toolName);
         }
 
         // Add viewport to tool group
         toolGroupRef.current.addViewport(viewportId, renderingEngineId);
+
+        // Initial tool setup (triggers the useEffect above)
+        // No need to set here; the useEffect will handle it based on activeTool state
 
         // Sort DICOM files by instance number and slice location
         const sortedFiles = await Promise.all(
@@ -281,7 +307,7 @@ function Viewer() {
                 originalIndex: index,
               };
             } catch (error) {
-              console.warn(`Error parsing DICOM file ${index}:`, error);
+              console.log(`Error parsing DICOM file ${index}:`, error);
               return {
                 file,
                 sortKey: index,
@@ -312,6 +338,7 @@ function Viewer() {
           const imageId = cornerstoneDICOMImageLoader.wadouri.fileManager.add(
             sortedFiles[i].file
           );
+          console.log(`Image ID: ${imageId}`);
           imageIds.push(imageId);
         }
 
@@ -322,7 +349,7 @@ function Viewer() {
 
         // Set the stack on the viewport
         if (imageIds.length > 0) {
-          await viewport.setStack(imageIds, 0); // Start with the first image
+          await viewport.setStack(imageIds, 0);
           viewport.render();
 
           console.log("DICOM images loaded successfully");
@@ -332,7 +359,7 @@ function Viewer() {
 
         setLoadingImages(false);
       } catch (error) {
-        console.error("Failed to initialize viewer:", error);
+        console.log("Failed to initialize viewer:", error);
         setImageError(`Failed to load DICOM images: ${error.message}`);
         setLoadingImages(false);
       }
@@ -348,18 +375,37 @@ function Viewer() {
             toolGroupRef.current.id
           );
         } catch (error) {
-          console.error("Error destroying tool group:", error);
+          console.log("Error destroying tool group:", error);
         }
       }
       if (renderingEngineRef.current) {
         renderingEngineRef.current.destroy();
       }
     };
-  }, [dicomBlobData]);
+  }, [dicomBlobData, isInitialized, examId]);
+
+  // Debug examId
+  useEffect(() => {
+    console.log("Current examId:", examId);
+    if (!examId || examId === "undefined") {
+      console.log("ExamId is undefined or invalid");
+    }
+  }, [examId]);
+
+  const handleReset = () => {
+    if (!viewportRef.current) return;
+    viewportRef.current.resetCamera();
+    viewportRef.current.render();
+  };
 
   return (
-    <div className="h-screen w-screen bg-gray-900">
-      {(isLoadingDicomBlobData || loadingImages) && (
+    <div className="h-screen w-screen bg-gray-900 relative">
+      {!isInitialized && (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-white text-xl">Initializing DICOM viewer...</div>
+        </div>
+      )}
+      {isInitialized && (isLoadingDicomBlobData || loadingImages) && (
         <div className="flex items-center justify-center h-full">
           <div className="text-white text-xl">
             {isLoadingDicomBlobData
@@ -375,11 +421,52 @@ function Viewer() {
           </div>
         </div>
       )}
-      <div
-        ref={containerRef}
-        className="w-full h-full"
-        style={{ backgroundColor: "black" }}
-      />
+      {isInitialized &&
+        !isLoadingDicomBlobData &&
+        !loadingImages &&
+        !errorDicomBlobData &&
+        !imageError && (
+          <div className="flex items-center absolute top-2 left-2 z-10 space-x-2 ">
+            <Logo />
+            <button
+              className={`px-4 py-2 rounded h-10 cursor-pointer ${
+                activeTool === "WindowLevel"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTool("WindowLevel")}
+            >
+              Window/Level
+            </button>
+            <button
+              className={`px-4 py-2 rounded h-10 cursor-pointer ${
+                activeTool === "Pan"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTool("Pan")}
+            >
+              Pan
+            </button>
+            <button
+              className={`px-4 py-2 rounded h-10 cursor-pointer ${
+                activeTool === "Zoom"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTool("Zoom")}
+            >
+              Zoom
+            </button>
+            <button
+              className="px-4 py-2 rounded h-10 cursor-pointer bg-white text-black"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      <div ref={containerRef} className="w-full h-full rounded border-black" />
     </div>
   );
 }
